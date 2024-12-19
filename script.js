@@ -11,52 +11,27 @@ document.querySelectorAll('a[href^="#"]').forEach((anchor) => {
   });
 });
 
-// Navbar scroll effect
-const navbar = document.querySelector(".navbar");
-window.addEventListener("scroll", () => {
-  if (window.scrollY > 100) {
-    navbar.style.background = "rgba(10, 25, 47, 0.98)";
-    navbar.style.boxShadow = "0 4px 8px rgba(0, 0, 0, 0.3)";
-  } else {
-    navbar.style.background = "rgba(10, 25, 47, 0.85)";
-    navbar.style.boxShadow = "none";
-  }
-});
-
 // Header scroll behavior
+const header = document.querySelector('.header');
 let lastScrollTop = 0;
-const header = document.querySelector('header');
-const scrollThreshold = 50; // Minimum scroll amount before hiding/showing
-let isScrolling = false;
+const scrollThreshold = 100;
 
 window.addEventListener('scroll', () => {
-    if (!isScrolling) {
-        window.requestAnimationFrame(() => {
-            const currentScroll = window.pageYOffset || document.documentElement.scrollTop;
-            
-            // Add/remove background based on scroll position
-            if (currentScroll > 50) {
-                header.classList.add('scrolled');
-            } else {
-                header.classList.remove('scrolled');
-            }
-            
-            // Handle header hide/show
-            if (Math.abs(currentScroll - lastScrollTop) > scrollThreshold) {
-                if (currentScroll > lastScrollTop && currentScroll > 100) {
-                    // Scrolling down & past header
-                    header.classList.add('header-hidden');
-                } else {
-                    // Scrolling up
-                    header.classList.remove('header-hidden');
-                }
-                lastScrollTop = currentScroll;
-            }
-            
-            isScrolling = false;
-        });
-        isScrolling = true;
+    // Background and shadow effect
+    if (window.scrollY > 100) {
+        header.classList.add('scrolled');
+    } else {
+        header.classList.remove('scrolled');
     }
+
+    // Hide/show header on scroll
+    const currentScroll = window.pageYOffset || document.documentElement.scrollTop;
+    if (currentScroll > lastScrollTop && currentScroll > scrollThreshold) {
+        header.style.transform = 'translateY(-100%)';
+    } else {
+        header.style.transform = 'translateY(0)';
+    }
+    lastScrollTop = currentScroll <= 0 ? 0 : currentScroll;
 });
 
 // Form submission
@@ -93,68 +68,85 @@ document.querySelectorAll("section").forEach((section) => {
 
 // Custom cursor
 document.addEventListener('DOMContentLoaded', () => {
+    let mouseX = 0, mouseY = 0;
+    let cursorX = 0, cursorY = 0;
+    let followerX = 0, followerY = 0;
+
     const cursor = document.querySelector('.cursor');
     const cursorFollower = document.querySelector('.cursor-follower');
 
-    // Only initialize cursor if elements exist and not on touch device
-    if (cursor && cursorFollower && window.matchMedia('(hover: hover)').matches) {
-        let mouseX = 0;
-        let mouseY = 0;
-        let cursorX = 0;
-        let cursorY = 0;
-        let followerX = 0;
-        let followerY = 0;
+    // Track mouse movement
+    document.addEventListener('mousemove', (e) => {
+        mouseX = e.clientX;
+        mouseY = e.clientY;
+    });
 
-        document.addEventListener('mousemove', (e) => {
-            mouseX = e.clientX;
-            mouseY = e.clientY;
+    // Hover effect for clickable elements
+    const clickableElements = document.querySelectorAll('a, button, .logo-container, .nav-link');
+    clickableElements.forEach(el => {
+        el.addEventListener('mouseenter', () => {
+            cursor.classList.add('cursor-hover');
+            cursorFollower.classList.add('cursor-hover');
         });
-
-        // Hover effect for clickable elements
-        const clickableElements = document.querySelectorAll('a, button, .logo-container, .nav-link');
-        clickableElements.forEach(el => {
-            el.addEventListener('mouseenter', () => {
-                cursor.style.transform = 'translate(-50%, -50%) scale(1.5)';
-                cursorFollower.style.transform = 'translate(-50%, -50%) scale(1.5)';
-            });
-            
-            el.addEventListener('mouseleave', () => {
-                cursor.style.transform = 'translate(-50%, -50%) scale(1)';
-                cursorFollower.style.transform = 'translate(-50%, -50%) scale(1)';
-            });
+        
+        el.addEventListener('mouseleave', () => {
+            cursor.classList.remove('cursor-hover');
+            cursorFollower.classList.remove('cursor-hover');
         });
+    });
 
-        // Smooth cursor animation
-        function updateCursor() {
-            // Smooth movement for cursor
-            cursorX += (mouseX - cursorX) * 0.2;
-            cursorY += (mouseY - cursorY) * 0.2;
-            cursor.style.left = `${cursorX}px`;
-            cursor.style.top = `${cursorY}px`;
+    // Smooth cursor animation
+    function updateCursor() {
+        // Smooth movement for cursor
+        cursorX += (mouseX - cursorX) * 0.2;
+        cursorY += (mouseY - cursorY) * 0.2;
+        cursor.style.left = `${cursorX}px`;
+        cursor.style.top = `${cursorY}px`;
 
-            // Smoother movement for follower
-            followerX += (mouseX - followerX) * 0.1;
-            followerY += (mouseY - followerY) * 0.1;
-            cursorFollower.style.left = `${followerX}px`;
-            cursorFollower.style.top = `${followerY}px`;
+        // Smoother movement for follower
+        followerX += (mouseX - followerX) * 0.1;
+        followerY += (mouseY - followerY) * 0.1;
+        cursorFollower.style.left = `${followerX}px`;
+        cursorFollower.style.top = `${followerY}px`;
 
-            requestAnimationFrame(updateCursor);
-        }
+        requestAnimationFrame(updateCursor);
+    }
 
-        // Hide default cursor
+    // Hide default cursor and initialize animation
+    if (cursor && cursorFollower) {
         document.body.style.cursor = 'none';
-
-        // Initialize cursor animation
         updateCursor();
     }
 });
 
+// Animate skill bars when they come into view
+const animateSkillBars = () => {
+    const skillBars = document.querySelectorAll('.skill-progress-bar');
+    const observer = new IntersectionObserver((entries) => {
+        entries.forEach(entry => {
+            if (entry.isIntersecting) {
+                const width = entry.target.style.width;
+                entry.target.style.width = '0';
+                setTimeout(() => {
+                    entry.target.style.width = width;
+                }, 100);
+                observer.unobserve(entry.target);
+            }
+        });
+    }, { threshold: 0.5 });
+
+    skillBars.forEach(bar => observer.observe(bar));
+};
+
+// Initialize animations
+document.addEventListener('DOMContentLoaded', () => {
+    animateSkillBars();
+});
+
 // Theme Switcher
 const initTheme = () => {
-    const themeToggle = document.createElement('button');
-    themeToggle.className = 'theme-switch';
-    themeToggle.setAttribute('aria-label', 'Toggle theme');
-    themeToggle.innerHTML = '🌙'; // Default to dark theme icon
+    const themeToggle = document.querySelector('.theme-switch');
+    const themeIcon = themeToggle.querySelector('i');
 
     // Get theme from localStorage or system preference
     const savedTheme = localStorage.getItem('theme');
@@ -163,7 +155,7 @@ const initTheme = () => {
 
     // Set initial theme
     document.documentElement.setAttribute('data-theme', currentTheme);
-    themeToggle.innerHTML = currentTheme === 'dark' ? '🌙' : '☀️';
+    themeIcon.className = currentTheme === 'dark' ? 'fas fa-sun' : 'fas fa-moon';
 
     // Theme toggle handler
     themeToggle.addEventListener('click', () => {
@@ -172,20 +164,19 @@ const initTheme = () => {
         
         document.documentElement.setAttribute('data-theme', newTheme);
         localStorage.setItem('theme', newTheme);
-        themeToggle.innerHTML = newTheme === 'dark' ? '🌙' : '☀️';
+        themeIcon.className = newTheme === 'dark' ? 'fas fa-sun' : 'fas fa-moon';
     });
-
-    // Add theme toggle to body
-    document.body.appendChild(themeToggle);
 };
 
 // Listen for system theme changes
 window.matchMedia('(prefers-color-scheme: dark)').addEventListener('change', (e) => {
     if (!localStorage.getItem('theme')) {
-        document.documentElement.setAttribute('data-theme', e.matches ? 'dark' : 'light');
-        document.querySelector('.theme-switch').innerHTML = e.matches ? '🌙' : '☀️';
+        const newTheme = e.matches ? 'dark' : 'light';
+        document.documentElement.setAttribute('data-theme', newTheme);
+        const themeIcon = document.querySelector('.theme-switch i');
+        themeIcon.className = newTheme === 'dark' ? 'fas fa-sun' : 'fas fa-moon';
     }
 });
 
-// Initialize theme when DOM is loaded
-document.addEventListener('DOMContentLoaded', initTheme);
+// Initialize theme
+initTheme();
